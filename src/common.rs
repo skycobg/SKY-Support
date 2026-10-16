@@ -1151,6 +1151,10 @@ fn get_api_server_(api: String, custom: String) -> String {
         return api.to_owned();
     }
     let s0 = get_custom_rendezvous_server(custom);
+    // SKY Support: built-in server -> built-in API server (HTTPS behind nginx).
+    if s0.is_empty() && !config::DEFAULT_API_SERVER.is_empty() {
+        return config::DEFAULT_API_SERVER.to_owned();
+    }
     if !s0.is_empty() {
         let s = crate::increase_port(&s0, -2);
         if s == s0 {
