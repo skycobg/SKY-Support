@@ -126,6 +126,12 @@ pub fn core_main() -> Option<Vec<String>> {
         flutter_args.push("--install".to_string());
     }
     if args.contains(&"--noinstall".to_string()) {
+        // SKY: started by the SKY Zapper app. Run as a portable app and hide the
+        // "Install" card and buttons (same effect as the custom-client option).
+        config::HARD_SETTINGS
+            .write()
+            .unwrap()
+            .insert("disable-installation".to_owned(), "Y".to_owned());
         args.clear();
     }
     // The portable wrapper injects `--install` when its name ends with `install.exe`,

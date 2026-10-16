@@ -19,6 +19,8 @@ or endorsed by them.
   `src/common.rs`, shown in title bars and substituted for "RustDesk" in all translated texts by `src/lang.rs`),
   Android package `bg.sky.support`, icons in `res/`, `flutter/assets/`, `flutter/android/.../mipmap-*`,
   Windows resource strings.
+- `--noinstall` (upstream flag: run portable, never install) additionally hides the "Install" card and
+  buttons (`src/core_main.rs`). The SKY Zapper desktop app starts SKY Support with it.
 - Build: `.github/workflows/sky-build.yml` builds Windows x64 and Android arm64 with GitHub Actions.
 
 Only the public key of our server is embedded; private keys and credentials are never in this repository.
