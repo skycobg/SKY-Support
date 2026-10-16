@@ -19,3 +19,5 @@ or endorsed by them.
 - Build: `.github/workflows/sky-build.yml` builds Windows x64 and Android arm64 with GitHub Actions.
 
 Only the public key of our server is embedded; private keys and credentials are never in this repository.
+
+Builds: GitHub Actions workflow `sky-build.yml` (manual run or tag `sky-*`).
