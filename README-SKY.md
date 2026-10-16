@@ -14,8 +14,11 @@ or endorsed by them.
 - Built-in server: `libs/hbb_common/src/config.rs` (`RENDEZVOUS_SERVERS`, `RS_PUB_KEY`,
   `DEFAULT_API_SERVER`), `src/common.rs` (`get_api_server_`). The submodule `libs/hbb_common` points to
   our fork <https://github.com/skycobg/hbb_common>.
-- Branding: app name `SKY-Support`, Android package `bg.sky.support`, icons in `res/`, `flutter/assets/`,
-  `flutter/android/.../mipmap-*`, Windows resource strings.
+- Branding: app name `SKY-Support` (technical: files, pipes, services, uri scheme) with the display name
+  `SKY Support` (`APP_DISPLAY_NAME` in `libs/hbb_common/src/config.rs`, `get_app_display_name()` in
+  `src/common.rs`, shown in title bars and substituted for "RustDesk" in all translated texts by `src/lang.rs`),
+  Android package `bg.sky.support`, icons in `res/`, `flutter/assets/`, `flutter/android/.../mipmap-*`,
+  Windows resource strings.
 - Build: `.github/workflows/sky-build.yml` builds Windows x64 and Android arm64 with GitHub Actions.
 
 Only the public key of our server is embedded; private keys and credentials are never in this repository.

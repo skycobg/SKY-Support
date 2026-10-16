@@ -1083,6 +1083,16 @@ pub fn get_app_name() -> String {
     hbb_common::config::APP_NAME.read().unwrap().clone()
 }
 
+/// SKY: the name shown to people ("SKY Support"). `get_app_name()` ("SKY-Support") names files, pipes and services.
+#[inline]
+pub fn get_app_display_name() -> String {
+    if config::APP_DISPLAY_NAME.is_empty() {
+        get_app_name()
+    } else {
+        config::APP_DISPLAY_NAME.to_owned()
+    }
+}
+
 #[inline]
 pub fn is_rustdesk() -> bool {
     hbb_common::config::APP_NAME.read().unwrap().eq("RustDesk")
