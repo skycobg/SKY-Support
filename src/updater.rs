@@ -173,6 +173,19 @@ fn start_auto_update_check_(rx_msg: Receiver<UpdateMsg>) {
     }
 }
 
+// SKY: our server instead of GitHub; the installed app is replaced the upstream way (`--update`).
+#[cfg(target_os = "windows")]
+fn sky_check_update() -> ResultType<()> {
+    let Some(pending) = crate::sky_update::check()? else {
+        return Ok(());
+    };
+    let file_path = crate::sky_update::download(&pending)?;
+    if has_no_active_conns() {
+        update_new_version(false, &pending.version, &file_path);
+    }
+    Ok(())
+}
+
 fn check_update(manually: bool) -> ResultType<()> {
     // On macOS, auto-update is handled by check_update_as_root() in the service process.
     // The shared check_update() path is only used for manual update checks from the GUI.
@@ -184,6 +197,10 @@ fn check_update(manually: bool) -> ResultType<()> {
     let update_msi = crate::platform::is_msi_installed()? && !crate::is_custom_client();
     if !(manually || config::Config::get_bool_option(keys::OPTION_ALLOW_AUTO_UPDATE)) {
         return Ok(());
+    }
+    #[cfg(target_os = "windows")]
+    if crate::sky_update::is_enabled() {
+        return sky_check_update();
     }
     if do_check_software_update().is_err() {
         // ignore

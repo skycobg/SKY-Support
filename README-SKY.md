@@ -25,6 +25,11 @@ or endorsed by them.
   screen each remote display was shown (per set of local screens) and restores it on the next connection;
   captured automatically on window move/resize/fullscreen, thin hooks in `model.dart`, `tabbar_widget.dart`,
   `remote_tab_page.dart`, `common.dart`, `multi_window_manager.dart`, `desktop_home_page.dart`.
+- Automatic updates from our server: `src/sky_update.rs` reads `SKY_UPDATE_INFO_URL`
+  (`https://zapper.sky.bg/support/version.json`, written by our release script), compares the version with
+  `crate::VERSION`, downloads the signed exe, verifies its sha256 and hands it to the upstream `--update`
+  path; hooked into `src/updater.rs` (installed Windows clients, service process) and on by default
+  (`apply_defaults()` in `core_main`). Our versions are `<upstream>-<n>` (1.5.0-2, …, n ≤ 9) in `Cargo.toml`.
 - Build: `.github/workflows/sky-build.yml` builds Windows x64 and Android arm64 with GitHub Actions.
 
 Only the public key of our server is embedded; private keys and credentials are never in this repository.
