@@ -63,6 +63,7 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
     final screenRect = parseParamScreenRect(params);
     _isScreenRectSet = screenRect != null;
     _display = display as int?;
+    SkyDisplayLayout.onWindowSession(_display);
     tryMoveToScreenAndSetFullscreen(screenRect,
         fullscreen: parseParamScreenRectFullscreen(params));
     if (peerId != null) {
@@ -89,7 +90,6 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
           )) {
             return;
           }
-          if (_display != null) SkyDisplayLayout.onUserClosed(tabController);
           tabController.closeBy(peerId!);
         },
         page: RemotePage(
@@ -393,7 +393,6 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
   }
 
   Future<bool> handleWindowCloseButton() async {
-    if (_display != null) SkyDisplayLayout.onUserClosed(tabController);
     final connLength = tabController.length;
     if (connLength == 1) {
       if (await desktopTryShowTabAuditDialogCloseCancelled(
@@ -439,6 +438,7 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
       final display = args['display'];
       final displays = args['displays'];
       final screenRect = parseParamScreenRect(args);
+      SkyDisplayLayout.onWindowSession(display as int?);
       final prePeerCount = tabController.length;
       Future.delayed(Duration.zero, () async {
         if (stateGlobal.fullscreen.isTrue) {
@@ -465,7 +465,6 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
           )) {
             return;
           }
-          if (_display != null) SkyDisplayLayout.onUserClosed(tabController);
           tabController.closeBy(id);
         },
         page: RemotePage(

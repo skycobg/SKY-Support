@@ -314,6 +314,9 @@ pub fn get_peer_flutter_option(id: String, name: String) -> String {
 #[inline]
 #[cfg(feature = "flutter")]
 pub fn set_peer_flutter_option(id: String, name: String, value: String) {
+    // SKY: windows write options of the same peer from different threads.
+    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let _lock = LOCK.lock();
     let mut c = PeerConfig::load(&id);
     if value.is_empty() {
         c.ui_flutter.remove(&name);

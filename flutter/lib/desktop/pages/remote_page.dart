@@ -12,6 +12,7 @@ import '../../consts.dart';
 import '../../common/widgets/overlay.dart';
 import '../../common/widgets/remote_input.dart';
 import '../../common.dart';
+import 'package:flutter_hbb/common/sky_display_layout.dart';
 import '../../common/widgets/dialog.dart';
 import '../../common/widgets/toolbar.dart';
 import '../../models/model.dart';
@@ -637,6 +638,7 @@ class _RemotePageState extends State<RemotePage>
   @override
   Future<void> dispose() async {
     final closeSession = closeSessionOnDispose.remove(widget.id) ?? true;
+    SkyDisplayLayout.onSessionClosed(_ffi, closeSession);
 
     // https://github.com/flutter/flutter/issues/64935
     if (isMacOS) {

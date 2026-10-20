@@ -9,6 +9,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common/formatter/id_formatter.dart';
+import 'package:flutter_hbb/common/sky_display_layout.dart';
 import 'package:flutter_hbb/desktop/widgets/refresh_wrapper.dart';
 import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
 import 'package:flutter_hbb/main.dart';
@@ -3388,6 +3389,7 @@ Future<List<Rect>> getScreenRectList() async {
 openMonitorInTheSameTab(int i, FFI ffi, PeerInfo pi,
     {bool updateCursorPos = true, bool recordSelection = true}) {
   if (recordSelection) {
+    SkyDisplayLayout.onDisplaySwitched(ffi.id, pi.currentDisplay, i);
     ffi.ffiModel.lastUserDisplay = i;
     ffi.ffiModel.cancelPendingRestoreTimer();
     ffi.ffiModel.pendingMonitorRestore = null;

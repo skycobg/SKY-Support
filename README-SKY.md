@@ -22,14 +22,20 @@ or endorsed by them.
 - `--noinstall` (upstream flag: run portable, never install) additionally hides the "Install" card and
   buttons (`src/core_main.rs`). The SKY Zapper desktop app starts SKY Support with it.
 - Monitor layout per peer (desktop): `flutter/lib/common/sky_display_layout.dart` remembers on which local
-  screen each remote display was shown (per set of local screens) and restores it on the next connection;
-  captured automatically on window move/resize/fullscreen, thin hooks in `model.dart`, `tabbar_widget.dart`,
-  `remote_tab_page.dart`, `common.dart`, `multi_window_manager.dart`, `desktop_home_page.dart`.
+  screen each remote display was shown (per set of local screens) and restores it on the next connection.
+  Recorded when a session is established and on every window move/resize/fullscreen; a display switched away
+  from is forgotten; windows the user closes get a "closed at" time, so a window closed long before the end
+  of the session stays closed while the ones closed together at the end come back. Thin hooks in `model.dart`
+  (`handlePeerInfo`), `tabbar_widget.dart` (`_saveFrame`), `remote_tab_page.dart`, `remote_page.dart`
+  (`dispose`), `common.dart` (`openMonitorInTheSameTab`, exact frame through `screen_rect.f`),
+  `multi_window_manager.dart`, `desktop_home_page.dart`; `src/ui_interface.rs` serializes
+  `set_peer_flutter_option` (several windows write the same peer file).
 - Automatic updates from our server: `src/sky_update.rs` reads `SKY_UPDATE_INFO_URL`
   (`https://zapper.sky.bg/support/version.json`, written by our release script), compares the version with
   `crate::VERSION`, downloads the signed exe, verifies its sha256 and hands it to the upstream `--update`
   path; hooked into `src/updater.rs` (installed Windows clients, service process) and on by default
-  (`apply_defaults()` in `core_main`). Our versions are `<upstream>-<n>` (1.5.0-2, …, n ≤ 9) in `Cargo.toml`.
+  (`apply_defaults()` in `core_main`). Our versions are `<upstream>-<n>` (1.5.0-2, …, n ≤ 9) in `Cargo.toml`
+  and `Cargo.lock`; the registry DWORD `VersionBuild` takes the number before the dash (`src/platform/windows.rs`).
 - Build: `.github/workflows/sky-build.yml` builds Windows x64 and Android arm64 with GitHub Actions.
 
 Only the public key of our server is embedded; private keys and credentials are never in this repository.

@@ -1491,10 +1491,10 @@ class FfiModel with ChangeNotifier {
 
     notifyListeners();
 
-    if (!isCache) {
-      if (!await SkyDisplayLayout.tryApply(this, peerId)) {
-        tryUseAllMyDisplaysForTheRemoteSession(peerId);
-      }
+    final skyLayoutApplied =
+        await SkyDisplayLayout.tryApply(this, peerId, isCache: isCache);
+    if (!isCache && !skyLayoutApplied) {
+      tryUseAllMyDisplaysForTheRemoteSession(peerId);
     }
   }
 
@@ -1776,7 +1776,6 @@ class FfiModel with ChangeNotifier {
   switchToNewDisplay(int display, SessionID sessionId, String peerId,
       {bool updateCursorPos = false}) {
     // no need to wait for the response
-    SkyDisplayLayout.onDisplaySwitched(peerId, pi.currentDisplay, display);
     pi.currentDisplay = display;
     updateCurDisplay(sessionId, updateCursorPos: updateCursorPos);
     try {
