@@ -181,6 +181,8 @@ fn sky_check_update() -> ResultType<()> {
     };
     let file_path = crate::sky_update::download(&pending)?;
     if has_no_active_conns() {
+        // Checked again from disk right before the privileged launch.
+        crate::sky_update::verify_file(&file_path, &pending.sha256)?;
         update_new_version(false, &pending.version, &file_path);
     }
     Ok(())

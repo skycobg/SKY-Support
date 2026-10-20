@@ -113,8 +113,36 @@ pub fn download(p: &Pending) -> ResultType<PathBuf> {
             p.sha256
         );
     }
-    let mut file = std::fs::File::create(&file_path)?;
+    // The temp dir is shared: never write into a file somebody else created
+    // there (it could be rewritten after the check), always a fresh one of ours.
+    std::fs::remove_file(&file_path).ok();
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&file_path)?;
     file.write_all(&data)?;
+    file.sync_all()?;
+    drop(file);
+    verify_file(&file_path, &p.sha256)?;
     log::info!("sky update: downloaded {} ({} bytes)", file_path.display(), data.len());
     Ok(file_path)
+}
+
+/// Re-hashes the file on disk; called again right before it is launched.
+pub fn verify_file(path: &PathBuf, sha256: &str) -> ResultType<()> {
+    let data = std::fs::read(path)?;
+    let hex: String = Sha256::digest(&data)
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    if hex != sha256 {
+        std::fs::remove_file(path).ok();
+        bail!(
+            "sky update: {} changed on disk (sha256 {}, expected {})",
+            path.display(),
+            hex,
+            sha256
+        );
+    }
+    Ok(())
 }
