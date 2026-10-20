@@ -36,7 +36,22 @@ or endorsed by them.
   path; hooked into `src/updater.rs` (installed Windows clients, service process) and on by default
   (`apply_defaults()` in `core_main`). Our versions are `<upstream>-<n>` (1.5.0-2, …, n ≤ 9) in `Cargo.toml`
   and `Cargo.lock`; the registry DWORD `VersionBuild` takes the number before the dash (`src/platform/windows.rs`).
-- Build: `.github/workflows/sky-build.yml` builds Windows x64 and Android arm64 with GitHub Actions.
+- Our own server, not the public one: `using_public_server()` returns false (`src/common.rs`), so there is no
+  "set up your own server" tip, no cap on custom image quality and the direct-connection options are shown.
+- Audit records to our API server (lejianwen/rustdesk-api): its `{"code":0,...}` answer counts as success
+  (`src/server/connection.rs`); before, every record was posted three times.
+- A note at the end of each session is asked for by default (`allow-ask-for-note`, `apply_defaults()` in
+  `src/sky_update.rs`); our API server keeps it with the connection log.
+- About: links to this source code and to sky.bg instead of rustdesk.com (desktop and mobile settings); the
+  install page links to our licence.
+- Windows app list: the shown name `SKY Support` and the publisher `SKY COMPANY EOOD` (`src/platform/windows.rs`,
+  also written on update). The portable exe's Details carry our names (`libs/portable/Cargo.toml`) and our
+  version (`SKY_VERSION` in `libs/portable/build.rs`).
+- macOS: the bundle is `SKY-Support.app` (the Rust side expects `/Applications/<APP_NAME>.app`), bundle id
+  `bg.sky.support`, shown name `SKY Support`, URL scheme `sky-support`, our icon (`flutter/macos/...`, `build.py`).
+  Built unsigned (ad-hoc signed, not notarized) until SKY has an Apple Developer ID.
+- Build: `.github/workflows/sky-build.yml` builds Windows x64, Android arm64 and macOS (arm64 and Intel) with
+  GitHub Actions; a manual run can be limited to `win-android` or `macos`.
 
 Only the public key of our server is embedded; private keys and credentials are never in this repository.
 

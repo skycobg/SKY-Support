@@ -1702,6 +1702,15 @@ impl Connection {
                             if text.trim().is_empty() {
                                 return Ok(text);
                             }
+                            // SKY: our API server (rustdesk-api) confirms with {"code":0,...};
+                            // without this every audit record was posted three times.
+                            if serde_json::from_str::<Value>(&text)
+                                .ok()
+                                .and_then(|v| v.get("code")?.as_i64())
+                                == Some(0)
+                            {
+                                return Ok(text);
+                            }
                             let server_err = serde_json::from_str::<Value>(&text)
                                 .ok()
                                 .and_then(|v| v.get("error")?.as_str().map(|s| s.to_owned()))

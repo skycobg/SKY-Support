@@ -43,8 +43,13 @@ pub fn is_enabled() -> bool {
     !config::SKY_UPDATE_INFO_URL.is_empty()
 }
 
-/// Our build updates itself without asking: on unless the user turns it off.
+/// Our defaults: a technician is asked for a note at the end of each session (kept with the connection
+/// log on our server), and the build updates itself without asking. Both stay on unless the user turns them off.
 pub fn apply_defaults() {
+    config::DEFAULT_LOCAL_SETTINGS
+        .write()
+        .unwrap()
+        .insert("allow-ask-for-note".to_owned(), "Y".to_owned());
     if !is_enabled() {
         return;
     }

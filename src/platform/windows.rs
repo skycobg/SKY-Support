@@ -1582,6 +1582,9 @@ fn get_after_install(
     ", create_service=get_create_service(&exe))
 }
 
+/// SKY: the publisher shown in the Windows app list.
+const SKY_PUBLISHER: &str = "SKY COMPANY EOOD";
+
 pub fn install_me(options: &str, path: String, silent: bool, debug: bool) -> ResultType<()> {
     // MSI and EXE installations use different registry layouts, so MSI-to-EXE upgrades are not supported.
     let (installed_subkey, _, _, _) = get_install_info();
@@ -1719,6 +1722,9 @@ copy /Y \"{tmp_path}\\{app_name} Tray.lnk\" \"%PROGRAMDATA%\\Microsoft\\Windows\
         "".to_owned()
     };
 
+    // SKY: the Windows app list shows the display name and the company, not the technical name.
+    let display_name = crate::get_app_display_name();
+    let publisher = SKY_PUBLISHER;
     // Remember to check if `update_me` need to be changed if changing the `cmds`.
     // No need to merge the existing dup code, because the code in these two functions are too critical.
     // New code should be written in a common function.
@@ -1730,12 +1736,12 @@ md \"{path}\"
 {copy_exe}
 reg add {subkey} /f
 reg add {subkey} /f /v DisplayIcon /t REG_SZ /d \"{display_icon}\"
-reg add {subkey} /f /v DisplayName /t REG_SZ /d \"{app_name}\"
+reg add {subkey} /f /v DisplayName /t REG_SZ /d \"{display_name}\"
 reg add {subkey} /f /v DisplayVersion /t REG_SZ /d \"{version}\"
 reg add {subkey} /f /v Version /t REG_SZ /d \"{version}\"
 reg add {subkey} /f /v BuildDate /t REG_SZ /d \"{build_date}\"
 reg add {subkey} /f /v InstallLocation /t REG_SZ /d \"{path}\"
-reg add {subkey} /f /v Publisher /t REG_SZ /d \"{app_name}\"
+reg add {subkey} /f /v Publisher /t REG_SZ /d \"{publisher}\"
 reg add {subkey} /f /v VersionMajor /t REG_DWORD /d {version_major}
 reg add {subkey} /f /v VersionMinor /t REG_DWORD /d {version_minor}
 reg add {subkey} /f /v VersionBuild /t REG_DWORD /d {version_build}
@@ -3481,9 +3487,22 @@ pub fn update_me(debug: bool) -> ResultType<()> {
                 subkey, display_icon
             )
         };
+        // SKY: also set the shown name and the publisher, so updates from older builds fix them.
+        let reg_names = if is_msi.unwrap_or(false) {
+            "".to_string()
+        } else {
+            format!(
+                "reg add {} /f /v DisplayName /t REG_SZ /d \"{}\"\nreg add {} /f /v Publisher /t REG_SZ /d \"{}\"",
+                subkey,
+                crate::get_app_display_name(),
+                subkey,
+                SKY_PUBLISHER
+            )
+        };
         format!(
             "
 {reg_display_icon}
+{reg_names}
 reg add {subkey} /f /v DisplayVersion /t REG_SZ /d \"{version}\"
 reg add {subkey} /f /v Version /t REG_SZ /d \"{version}\"
 reg add {subkey} /f /v BuildDate /t REG_SZ /d \"{build_date}\"

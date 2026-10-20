@@ -2320,9 +2320,12 @@ pub fn create_symmetric_key_msg(their_pk_b: [u8; 32]) -> (Bytes, Bytes, secretbo
     (Vec::from(our_pk_b.0).into(), sealed_key.into(), key)
 }
 
+/// SKY: our server is built in (`RENDEZVOUS_SERVERS` in hbb_common), so we are never on the public server.
+/// Upstream only looked at `custom-rendezvous-server`: it showed the "set up your own server" tip, capped the
+/// custom image quality and hid the direct-connection options for us.
 #[inline]
 pub fn using_public_server() -> bool {
-    crate::get_custom_rendezvous_server(get_option("custom-rendezvous-server")).is_empty()
+    false
 }
 
 pub struct ThrottledInterval {

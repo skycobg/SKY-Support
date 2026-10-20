@@ -36,7 +36,8 @@ class SettingsPage extends StatefulWidget implements PageShape {
   State<SettingsPage> createState() => _SettingsState();
 }
 
-const url = 'https://rustdesk.com/';
+// SKY: the About tile opens our source code (AGPL-3.0).
+const url = 'https://github.com/skycobg/SKY-Support';
 
 enum KeepScreenOn {
   never,
@@ -1030,7 +1031,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
                 title: Text(translate("Version: ") + version),
                 value: Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text('rustdesk.com',
+                  child: Text('github.com/skycobg/SKY-Support',
                       style: TextStyle(
                         decoration: TextDecoration.underline,
                       )),
@@ -1060,11 +1061,12 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
                   child: Text(_myId),
                 ),
                 leading: Icon(Icons.perm_identity)),
+            // SKY: our website instead of the RustDesk privacy statement.
             SettingsTile(
-              title: Text(translate("Privacy Statement")),
-              onPressed: (context) =>
-                  launchUrlString('https://rustdesk.com/privacy.html'),
-              leading: Icon(Icons.privacy_tip),
+              title: Text(translate("Website")),
+              value: Text('sky.bg'),
+              onPressed: (context) => launchUrlString('https://sky.bg'),
+              leading: Icon(Icons.language),
             )
           ],
         ),
@@ -1176,7 +1178,7 @@ void showAbout(OverlayDialogManager dialogManager) {
         Text('Version: $version'),
         InkWell(
             onTap: () async {
-              const url = 'https://rustdesk.com/';
+              const url = 'https://github.com/skycobg/SKY-Support';
               await launchUrl(Uri.parse(url));
             },
             child: Padding(
