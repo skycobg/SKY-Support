@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_hbb/common/widgets/peers_view.dart';
+import 'package:flutter_hbb/common/sky_display_layout.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/models/ab_model.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
@@ -1491,7 +1492,9 @@ class FfiModel with ChangeNotifier {
     notifyListeners();
 
     if (!isCache) {
-      tryUseAllMyDisplaysForTheRemoteSession(peerId);
+      if (!await SkyDisplayLayout.tryApply(this, peerId)) {
+        tryUseAllMyDisplaysForTheRemoteSession(peerId);
+      }
     }
   }
 
@@ -1773,6 +1776,7 @@ class FfiModel with ChangeNotifier {
   switchToNewDisplay(int display, SessionID sessionId, String peerId,
       {bool updateCursorPos = false}) {
     // no need to wait for the response
+    SkyDisplayLayout.onDisplaySwitched(peerId, pi.currentDisplay, display);
     pi.currentDisplay = display;
     updateCurDisplay(sessionId, updateCursorPos: updateCursorPos);
     try {

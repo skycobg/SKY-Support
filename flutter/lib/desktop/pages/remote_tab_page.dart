@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common.dart';
+import 'package:flutter_hbb/common/sky_display_layout.dart';
 import 'package:flutter_hbb/common/shared_state.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/models/input_model.dart';
@@ -62,7 +63,8 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
     final screenRect = parseParamScreenRect(params);
     _isScreenRectSet = screenRect != null;
     _display = display as int?;
-    tryMoveToScreenAndSetFullscreen(screenRect);
+    tryMoveToScreenAndSetFullscreen(screenRect,
+        fullscreen: parseParamScreenRectFullscreen(params));
     if (peerId != null) {
       ConnectionTypeState.init(peerId!);
       tabController.onSelected = (id) {
@@ -87,6 +89,7 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
           )) {
             return;
           }
+          if (_display != null) SkyDisplayLayout.onUserClosed(tabController);
           tabController.closeBy(peerId!);
         },
         page: RemotePage(
@@ -390,6 +393,7 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
   }
 
   Future<bool> handleWindowCloseButton() async {
+    if (_display != null) SkyDisplayLayout.onUserClosed(tabController);
     final connLength = tabController.length;
     if (connLength == 1) {
       if (await desktopTryShowTabAuditDialogCloseCancelled(
@@ -442,7 +446,8 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
           stateGlobal.setFullscreen(false, procWnd: false);
         }
         await setNewConnectWindowFrame(windowId(), id!, prePeerCount,
-            WindowType.RemoteDesktop, display, screenRect);
+            WindowType.RemoteDesktop, display, screenRect,
+            fullscreen: parseParamScreenRectFullscreen(args));
         Future.delayed(Duration(milliseconds: isWindows ? 100 : 0), () async {
           await windowOnTop(windowId());
         });
@@ -460,6 +465,7 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
           )) {
             return;
           }
+          if (_display != null) SkyDisplayLayout.onUserClosed(tabController);
           tabController.closeBy(id);
         },
         page: RemotePage(

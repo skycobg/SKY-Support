@@ -21,6 +21,10 @@ or endorsed by them.
   Windows resource strings.
 - `--noinstall` (upstream flag: run portable, never install) additionally hides the "Install" card and
   buttons (`src/core_main.rs`). The SKY Zapper desktop app starts SKY Support with it.
+- Monitor layout per peer (desktop): `flutter/lib/common/sky_display_layout.dart` remembers on which local
+  screen each remote display was shown (per set of local screens) and restores it on the next connection;
+  captured automatically on window move/resize/fullscreen, thin hooks in `model.dart`, `tabbar_widget.dart`,
+  `remote_tab_page.dart`, `common.dart`, `multi_window_manager.dart`, `desktop_home_page.dart`.
 - Build: `.github/workflows/sky-build.yml` builds Windows x64 and Android arm64 with GitHub Actions.
 
 Only the public key of our server is embedded; private keys and credentials are never in this repository.

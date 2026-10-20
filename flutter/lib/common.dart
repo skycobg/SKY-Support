@@ -3419,7 +3419,7 @@ openMonitorInTheSameTab(int i, FFI ffi, PeerInfo pi,
 //
 // screenRect is used to move the new window to the specified screen and set fullscreen.
 openMonitorInNewTabOrWindow(int i, String peerId, PeerInfo pi,
-    {Rect? screenRect}) {
+    {Rect? screenRect, bool screenRectFullscreen = true}) {
   final args = {
     'window_id': stateGlobal.windowId,
     'peer_id': peerId,
@@ -3433,6 +3433,7 @@ openMonitorInNewTabOrWindow(int i, String peerId, PeerInfo pi,
       't': screenRect.top,
       'r': screenRect.right,
       'b': screenRect.bottom,
+      'f': screenRectFullscreen ? 1 : 0,
     };
   }
   DesktopMultiWindow.invokeMethod(
@@ -3440,7 +3441,8 @@ openMonitorInNewTabOrWindow(int i, String peerId, PeerInfo pi,
 }
 
 setNewConnectWindowFrame(int windowId, String peerId, int preSessionCount,
-    WindowType windowType, int? display, Rect? screenRect) async {
+    WindowType windowType, int? display, Rect? screenRect,
+    {bool fullscreen = true}) async {
   if (screenRect == null) {
     // Do not restore window position to new connection if there's a pre-session.
     // https://github.com/rustdesk/rustdesk/discussions/8825
@@ -3449,12 +3451,22 @@ setNewConnectWindowFrame(int windowId, String peerId, int preSessionCount,
           windowId: windowId, display: display, peerId: peerId);
     }
   } else {
-    await tryMoveToScreenAndSetFullscreen(screenRect);
+    await tryMoveToScreenAndSetFullscreen(screenRect, fullscreen: fullscreen);
   }
 }
 
-tryMoveToScreenAndSetFullscreen(Rect? screenRect) async {
+tryMoveToScreenAndSetFullscreen(Rect? screenRect,
+    {bool fullscreen = true}) async {
   if (screenRect == null) {
+    return;
+  }
+  if (!fullscreen) {
+    if (stateGlobal.fullscreen.isTrue) {
+      stateGlobal.setFullscreen(false);
+      await Future.delayed(Duration(milliseconds: 300));
+    }
+    await WindowController.fromWindowId(stateGlobal.windowId)
+        .setFrame(screenRect);
     return;
   }
   final wc = WindowController.fromWindowId(stateGlobal.windowId);
@@ -3485,6 +3497,15 @@ parseParamScreenRect(Map<String, dynamic> params) {
     screenRect = Rect.fromLTRB(l, t, r, b);
   }
   return screenRect;
+}
+
+// `f` in `screen_rect`: 1 (default) = fullscreen on that rect, 0 = exact frame.
+bool parseParamScreenRectFullscreen(Map<String, dynamic> params) {
+  final sr = params['screen_rect'];
+  if (sr is Map && sr['f'] != null) {
+    return sr['f'] != 0;
+  }
+  return true;
 }
 
 get isInputSourceFlutter => stateGlobal.getInputSource() == "Input source 2";
