@@ -27,7 +27,7 @@ native-windows-gui = {version = "1.0", default-features = false, features = ["an
 
 [package.metadata.winres]
 # SKY: our names in the Details tab; the version strings come from SKY_VERSION (build.rs).
-LegalCopyright = "© 2026 SKY COMPANY EOOD. Based on RustDesk, © Purslane Tech Pte. Ltd. (AGPL-3.0)"
+LegalCopyright = "Copyright (C) 2026 SKY COMPANY EOOD. Based on RustDesk, (C) Purslane Tech Pte. Ltd. (AGPL-3.0)"
 CompanyName = "SKY COMPANY EOOD"
 ProductName = "SKY Support"
 OriginalFilename = "SKY-Support.exe"
