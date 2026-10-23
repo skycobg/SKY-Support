@@ -50,6 +50,10 @@ or endorsed by them.
 - macOS: the bundle is `SKY-Support.app` (the Rust side expects `/Applications/<APP_NAME>.app`), bundle id
   `bg.sky.support`, shown name `SKY Support`, URL scheme `sky-support`, our icon (`flutter/macos/...`, `build.py`).
   Built unsigned (ad-hoc signed, not notarized) until SKY has an Apple Developer ID.
+- IDs: a custom ID ("Change ID", `--set-id`) is 6 to 16 of a-z, A-Z, 0-9, `-` and `_` in any order, so only
+  digits or only letters too; upstream asks for a letter first (`is_valid_custom_id` in `libs/hbb_common/src/lib.rs`,
+  the rules of `changeIdDialog` in `flutter/lib/common/widgets/dialog.dart`, the `id_change_tip` text). Our server
+  checks the same: <https://github.com/skycobg/rustdesk-server>.
 - Build: `.github/workflows/sky-build.yml` builds Windows x64, Android arm64 and macOS (arm64 and Intel) with
   GitHub Actions; a manual run can be limited to `win-android` or `macos`.
 

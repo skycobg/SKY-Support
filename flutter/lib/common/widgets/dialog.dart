@@ -77,7 +77,7 @@ void changeIdDialog() {
   final RxString rxId = controller.text.trim().obs;
 
   final rules = [
-    RegexValidationRule('starts with a letter', RegExp(r'^[a-zA-Z]')),
+    // SKY: any first character, as in hbb_common's is_valid_custom_id (only digits or only letters too).
     LengthRangeValidationRule(6, 16),
     RegexValidationRule('allowed characters', RegExp(r'^[\w-]*$'))
   ];
