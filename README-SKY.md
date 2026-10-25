@@ -60,6 +60,11 @@ or endorsed by them.
   mode), so a "View only" from before does not stick to the computer (upstream keeps it per peer). The
   mode goes to the peer's config before the session starts (`main_set_peer_view_only` in
   `src/flutter_ffi.rs`).
+- Logged in to our API server, connecting timed out ("Failed to secure tcp: deadline has elapsed"): the
+  client sends the API access token to the rendezvous server only after a key exchange that our hbbs (OSS)
+  does not do, and hbbs has no use for the token. So it is not sent (`io_loop` in
+  `src/ui_session_interface.rs`) and the rendezvous goes as for a client not logged in; the token stays
+  with the API server. Known limit: switching sides needs the same exchange.
 - Build: `.github/workflows/sky-build.yml` builds Windows x64, Android arm64 and macOS (arm64 and Intel) with
   GitHub Actions; a manual run can be limited to `win-android` or `macos`.
 
