@@ -77,6 +77,13 @@ class _PeerCardState extends State<_PeerCard>
           }
         },
         onLongPress: () => peerTabModel.select(peer),
+        onSecondaryTapUp: isDesktop && !peerTabModel.multiSelectionMode
+            ? (d) {
+                final p = d.globalPosition;
+                _menuPos = RelativeRect.fromLTRB(p.dx, p.dy, p.dx, p.dy);
+                _showPeerMenu(peer.id);
+              }
+            : null,
         child: child);
   }
 
@@ -547,6 +554,7 @@ abstract class BasePeerCard extends StatelessWidget {
     bool isRDP = false,
     bool isTerminal = false,
     bool isTerminalRunAsAdmin = false,
+    bool? viewOnly,
   }) {
     return MenuEntryButton<String>(
       childBuilder: (TextStyle? style) => Text(
@@ -566,6 +574,7 @@ abstract class BasePeerCard extends StatelessWidget {
           isTcpTunneling: isTcpTunneling,
           isRDP: isRDP,
           isTerminal: isTerminal || isTerminalRunAsAdmin,
+          viewOnly: viewOnly,
         );
       },
       padding: menuPadding,
@@ -582,6 +591,14 @@ abstract class BasePeerCard extends StatelessWidget {
           : '${translate('Connect')} ${peer.id}'),
     );
   }
+
+  @protected
+  MenuEntryBase<String> _fullControlAction(BuildContext context) =>
+      _connectCommonAction(context, translate('Full Control'), viewOnly: false);
+
+  @protected
+  MenuEntryBase<String> _viewOnlyAction(BuildContext context) =>
+      _connectCommonAction(context, translate('View only'), viewOnly: true);
 
   @protected
   MenuEntryBase<String> _transferFileAction(BuildContext context) {
@@ -967,7 +984,8 @@ class RecentPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      _connectAction(context),
+      _fullControlAction(context),
+      _viewOnlyAction(context),
       _transferFileAction(context),
       _viewCameraAction(context),
       _terminalAction(context),
@@ -1032,7 +1050,8 @@ class FavoritePeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      _connectAction(context),
+      _fullControlAction(context),
+      _viewOnlyAction(context),
       _transferFileAction(context),
       _viewCameraAction(context),
       _terminalAction(context),
@@ -1092,7 +1111,8 @@ class DiscoveredPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      _connectAction(context),
+      _fullControlAction(context),
+      _viewOnlyAction(context),
       _transferFileAction(context),
       _viewCameraAction(context),
       _terminalAction(context),
@@ -1151,7 +1171,8 @@ class AddressBookPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      _connectAction(context),
+      _fullControlAction(context),
+      _viewOnlyAction(context),
       _transferFileAction(context),
       _viewCameraAction(context),
       _terminalAction(context),
@@ -1308,7 +1329,8 @@ class MyGroupPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      _connectAction(context),
+      _fullControlAction(context),
+      _viewOnlyAction(context),
       _transferFileAction(context),
       _viewCameraAction(context),
       _terminalAction(context),
@@ -1543,7 +1565,15 @@ void connectInPeerTab(BuildContext context, Peer peer, PeerTabIndex tab,
     bool isViewCamera = false,
     bool isTcpTunneling = false,
     bool isRDP = false,
-    bool isTerminal = false}) async {
+    bool isTerminal = false,
+    bool? viewOnly}) async {
+  if (!isFileTransfer && !isViewCamera && !isTcpTunneling && !isRDP && !isTerminal) {
+    // SKY: the mode is picked per connection (as in Radmin), so a "View only" from before does not stick
+    bind.mainSetPeerViewOnly(
+        id: peer.id,
+        viewOnly:
+            viewOnly ?? bind.mainGetUserDefaultOption(key: kOptionViewOnly) == 'Y');
+  }
   var password = '';
   bool isSharedPassword = false;
   if (tab == PeerTabIndex.ab) {

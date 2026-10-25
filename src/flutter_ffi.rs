@@ -1428,6 +1428,17 @@ pub fn main_set_peer_option_sync(id: String, key: String, value: String) -> Sync
     SyncReturn(true)
 }
 
+// SKY: the mode the next remote control session with the peer starts in (Full control / View only, picked per
+// connection as in Radmin); the session reads it from the peer's config when it starts.
+pub fn main_set_peer_view_only(id: String, view_only: bool) -> SyncReturn<bool> {
+    let mut c = PeerConfig::load(&id);
+    if c.view_only.v != view_only {
+        c.view_only.v = view_only;
+        c.store(&id);
+    }
+    SyncReturn(true)
+}
+
 pub fn main_set_peer_alias(id: String, alias: String) {
     set_peer_option(id, "alias".to_owned(), alias)
 }

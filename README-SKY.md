@@ -54,6 +54,12 @@ or endorsed by them.
   digits or only letters too; upstream asks for a letter first (`is_valid_custom_id` in `libs/hbb_common/src/lib.rs`,
   the rules of `changeIdDialog` in `flutter/lib/common/widgets/dialog.dart`, the `id_change_tip` text). Our server
   checks the same: <https://github.com/skycobg/rustdesk-server>.
+- Peer menu as in Radmin (`flutter/lib/common/widgets/peer_card.dart`): a right click on a computer opens
+  its menu where the pointer is (upstream only has the "more" button); it starts with "Full Control" and
+  "View only", the mode of that connection. A double click starts in the default mode (Settings, View
+  mode), so a "View only" from before does not stick to the computer (upstream keeps it per peer). The
+  mode goes to the peer's config before the session starts (`main_set_peer_view_only` in
+  `src/flutter_ffi.rs`).
 - Build: `.github/workflows/sky-build.yml` builds Windows x64, Android arm64 and macOS (arm64 and Intel) with
   GitHub Actions; a manual run can be limited to `win-android` or `macos`.
 
