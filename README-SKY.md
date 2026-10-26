@@ -34,7 +34,11 @@ or endorsed by them.
   (`https://zapper.sky.bg/support/version.json`, written by our release script), compares the version with
   `crate::VERSION`, downloads the signed exe, verifies its sha256 and hands it to the upstream `--update`
   path; hooked into `src/updater.rs` (installed Windows clients, service process) and on by default
-  (`apply_defaults()` in `core_main`). Our versions are `<upstream>-<n>` (1.5.0-2, …, n ≤ 9) in `Cargo.toml`
+  (`apply_defaults()` in `core_main`). The service looks 30 s after it starts and then daily, and also when
+  the app asks: every time the app's window starts (upstream's start-up check, which asked rustdesk.com, now
+  asks the service over IPC: `sky-check-update`) and from "Check for updates" in About, which also shows the
+  version on our server; such a check waits a minute after the last one, not ten. It installs only while no
+  session is open, then brings the tray and the window back. Our versions are `<upstream>-<n>` (1.5.0-2, …, n ≤ 9) in `Cargo.toml`
   and `Cargo.lock`; the registry DWORD `VersionBuild` takes the number before the dash (`src/platform/windows.rs`).
 - Our own server, not the public one: `using_public_server()` returns false (`src/common.rs`), so there is no
   "set up your own server" tip, no cap on custom image quality and the direct-connection options are shown.

@@ -80,6 +80,9 @@ pub const MIN_INTERVAL: Duration = Duration::from_secs(60 * 10);
 /// Retry interval when an update check fails or a session is active (30 minutes).
 pub const RETRY_INTERVAL: Duration = Duration::from_secs(60 * 30);
 
+/// SKY: a check the app asks for (when it starts, from About) waits a minute after the last one, not ten.
+const SKY_MIN_ASKED_INTERVAL: Duration = Duration::from_secs(60);
+
 pub fn update_controlling_session_count(count: usize) {
     CONTROLLING_SESSION_COUNT.store(count, Ordering::SeqCst);
 }
@@ -151,7 +154,12 @@ fn start_auto_update_check_(rx_msg: Receiver<UpdateMsg>) {
         let recv_res = rx_msg.recv_timeout(check_interval);
         match &recv_res {
             Ok(UpdateMsg::CheckUpdate) | Err(_) => {
-                if last_check_time.elapsed() < MIN_INTERVAL {
+                let min_interval = if matches!(recv_res, Ok(UpdateMsg::CheckUpdate)) {
+                    SKY_MIN_ASKED_INTERVAL
+                } else {
+                    MIN_INTERVAL
+                };
+                if last_check_time.elapsed() < min_interval {
                     // log::debug!("Update check skipped due to minimum interval.");
                     continue;
                 }

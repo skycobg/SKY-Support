@@ -783,5 +783,11 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("To start a voice call, enable \"Audio capture\" on the \"Screen share\" page.", ""),
         ("Source code", "Изходен код"),
         ("View only", "Само преглед"),
+        ("Check for updates", "Провери за нова версия"),
+        ("Checking for updates", "Проверява се за нова версия…"),
+        ("sky-update-latest", "Имате най-новата версия ({})."),
+        ("sky-update-installing", "Има нова версия {}. Сваля се и се инсталира сама до минута, щом няма отворена връзка; програмата ще се пусне отново."),
+        ("sky-update-download", "Има нова версия {}: свалете я от zapper.sky.bg/softuer."),
+        ("sky-update-unreachable", "Сървърът за обновления не отговаря. Опитайте пак по-късно."),
     ].iter().cloned().collect();
 }

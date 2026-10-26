@@ -1018,6 +1018,12 @@ async fn handle(data: Data, stream: &mut Connection) {
                     crate::audio_service::set_voice_call_input_device(Some(value), true);
                 } else if name == "unlock-pin" {
                     Config::set_unlock_pin(&value);
+                } else if name == "sky-check-update" {
+                    // SKY: the app asks the service to look for a new version now (src/sky_update.rs)
+                    #[cfg(target_os = "windows")]
+                    {
+                        allow_err!(crate::updater::manually_check_update());
+                    }
                 } else {
                     return;
                 }

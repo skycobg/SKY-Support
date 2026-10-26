@@ -4090,6 +4090,11 @@ void earlyAssert() {
 
 void checkUpdate() {
   if (!isWeb) {
+    // SKY: ours counts as a custom client (its own name), so the upstream check below is skipped; on Windows the
+    // service is asked to look for a new version on our server instead (main_get_software_update_url).
+    if (isWindows) {
+      bind.mainGetSoftwareUpdateUrl();
+    }
     if (!bind.isCustomClient()) {
       platformFFI.registerEventHandler(
           kCheckSoftwareUpdateFinish, kCheckSoftwareUpdateFinish,

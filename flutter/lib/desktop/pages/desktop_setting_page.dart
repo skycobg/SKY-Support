@@ -2507,6 +2507,21 @@ class _About extends StatefulWidget {
 }
 
 class _AboutState extends State<_About> {
+  Future<void> _skyCheckUpdate() async {
+    showToast(translate('Checking for updates'));
+    final r = jsonDecode(await bind.mainSkyCheckUpdate());
+    final String msg;
+    if (r['error'] != null) {
+      msg = translate('sky-update-unreachable');
+    } else if (r['newer'] == true) {
+      msg = translate(isWindows ? 'sky-update-installing' : 'sky-update-download')
+          .replaceAll('{}', '${r['latest']}');
+    } else {
+      msg = translate('sky-update-latest').replaceAll('{}', '${r['current']}');
+    }
+    showToast(msg, timeout: const Duration(seconds: 8));
+  }
+
   @override
   Widget build(BuildContext context) {
     return futureBuilder(future: () async {
@@ -2542,6 +2557,13 @@ class _AboutState extends State<_About> {
               SelectionArea(
                   child: Text('${translate('Version')}: $version')
                       .marginSymmetric(vertical: 4.0)),
+              // SKY: look for a new version on our server now; on Windows the service installs it by itself.
+              InkWell(
+                  onTap: () => _skyCheckUpdate(),
+                  child: Text(
+                    translate('Check for updates'),
+                    style: linkStyle,
+                  ).marginSymmetric(vertical: 4.0)),
               SelectionArea(
                   child: Text('${translate('Build Date')}: $buildDate')
                       .marginSymmetric(vertical: 4.0)),

@@ -1802,7 +1802,38 @@ pub fn main_get_last_remote_id() -> String {
 }
 
 pub fn main_get_software_update_url() {
+    // SKY: our server, not rustdesk.com: when the app starts, the service is asked to look for a new version
+    // (it installs it by itself while no session is open).
+    #[cfg(target_os = "windows")]
+    {
+        if crate::sky_update::is_enabled() {
+            crate::sky_update::ask_service_to_check();
+            return;
+        }
+    }
     crate::common::check_software_update();
+}
+
+// SKY: "Check for updates" in About: the version on our server; when it is newer, the service is asked to install
+// it now (Windows).
+pub fn main_sky_check_update() -> String {
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    return match crate::sky_update::latest_version() {
+        Ok(latest) => {
+            let newer = hbb_common::get_version_number(&latest)
+                > hbb_common::get_version_number(crate::VERSION);
+            #[cfg(target_os = "windows")]
+            {
+                if newer {
+                    crate::sky_update::ask_service_to_check();
+                }
+            }
+            serde_json::json!({ "latest": latest, "current": crate::VERSION, "newer": newer }).to_string()
+        }
+        Err(e) => serde_json::json!({ "error": e.to_string(), "current": crate::VERSION }).to_string(),
+    };
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    return serde_json::json!({ "error": "unsupported", "current": crate::VERSION }).to_string();
 }
 
 pub fn main_get_home_dir() -> String {

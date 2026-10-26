@@ -4,8 +4,10 @@
 // finish-release.sh:
 //   {"version":"1.5.0-2","windows":{"url":"https://…/SKY-Support-1.5.0-2-x86_64.exe","sha256":"…"}}
 // The service's updater (src/updater.rs) calls `check()` once a day and after
-// start; a newer version is fetched with `download()`, verified by sha256 and
-// installed through the upstream `--update` path, without asking the user.
+// start, and when the app asks it to (`ask_service_to_check()`: when the app
+// starts and from "Check for updates" in About); a newer version is fetched with
+// `download()`, verified by sha256 and installed through the upstream `--update`
+// path, without asking the user, while no session is open.
 // Our versions are `<upstream>-<n>` (1.5.0-2, 1.5.0-3, …, n ≤ 9): the
 // upstream version comparison reserves that suffix for patch builds.
 
@@ -59,15 +61,32 @@ pub fn apply_defaults() {
     );
 }
 
-/// Asks our server for the current version. `Ok(None)`: nothing newer.
-pub fn check() -> ResultType<Option<Pending>> {
+fn fetch_info() -> ResultType<Info> {
     let url = config::SKY_UPDATE_INFO_URL;
     let client = crate::hbbs_http::create_http_client_with_url_strict(url)?;
     let resp = client.get(url).send()?;
     if !resp.status().is_success() {
         bail!("sky update: version info: HTTP {}", resp.status());
     }
-    let info: Info = serde_json::from_slice(&resp.bytes()?)?;
+    Ok(serde_json::from_slice(&resp.bytes()?)?)
+}
+
+/// The version on our server, for "Check for updates" in About.
+pub fn latest_version() -> ResultType<String> {
+    Ok(fetch_info()?.version)
+}
+
+/// Asks the service, which installs the updates, to look for a new version now.
+#[cfg(target_os = "windows")]
+pub fn ask_service_to_check() {
+    if let Err(e) = crate::ipc::set_config("sky-check-update", String::new()) {
+        log::warn!("sky update: cannot ask the service to check: {}", e);
+    }
+}
+
+/// Asks our server for the current version. `Ok(None)`: nothing newer.
+pub fn check() -> ResultType<Option<Pending>> {
+    let info = fetch_info()?;
     if get_version_number(&info.version) <= get_version_number(crate::VERSION) {
         log::debug!(
             "sky update: {} is current (server has {})",
