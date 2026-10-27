@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       platforms:
-        description: "all = Windows + Android + macOS; win-android; macos"
+        description: "win-android (default); all = Windows + Android + macOS; macos"
         type: choice
-        default: all
+        default: win-android
         options: [all, win-android, macos]
   push:
     tags:
@@ -384,7 +384,8 @@ jobs:
   macos:
     name: macos ${{ matrix.job.arch }}
     needs: [generate-bridge]
-    if: ${{ inputs.platforms != 'win-android' }}
+    # Niki, 27.10.2026: no macOS/iOS builds until the SKY Zapper apps exist there; only when asked for.
+    if: ${{ inputs.platforms == 'all' || inputs.platforms == 'macos' }}
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
