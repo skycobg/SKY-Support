@@ -36,7 +36,11 @@ pub fn computer_info() -> String {
         }
     };
     push(
-        "Компютър",
+        if cfg!(any(target_os = "android", target_os = "ios")) {
+            "Устройство"
+        } else {
+            "Компютър"
+        },
         if user.is_empty() {
             host.clone()
         } else {

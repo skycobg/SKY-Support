@@ -267,11 +267,9 @@ class _CustomerRequest {
     });
     try {
       if (isAndroid && !gFFI.serverModel.isStart) {
-        // Android shares the screen only after the system asks the user once more.
+        // Android shares the screen only after the system asks the user once more. No floating window:
+        // its permission is a settings page, and the request would wait on it.
         await gFFI.serverModel.checkRequestNotificationPermission();
-        if (bind.mainGetLocalOption(key: kOptionDisableFloatingWindow) != 'Y') {
-          await gFFI.serverModel.checkFloatingWindowPermission();
-        }
         await gFFI.serverModel.startService();
       }
       final computer = jsonDecode(await bind.mainGetCommon(key: 'sky-help-computer'));
@@ -438,8 +436,8 @@ class _CustomerRequest {
           if (isAndroid) ...[
             const SizedBox(height: 12),
             Text(
-                _t('Ако телефонът попита дали да споделя екрана, натиснете „Започни“.',
-                    'If the phone asks whether to share the screen, press "Start now".'),
+                _t('Ако телефонът попита дали да споделя екрана, натиснете „Сподели екрана“ (или „Започни“).',
+                    'If the phone asks whether to share the screen, press "Share screen" (or "Start now").'),
                 style: TextStyle(color: Theme.of(context).hintColor)),
           ],
         ]);
