@@ -24,6 +24,7 @@ import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'common.dart';
+import 'common/sky_help.dart';
 import 'consts.dart';
 import 'mobile/pages/home_page.dart';
 import 'mobile/pages/server_page.dart';
@@ -142,6 +143,7 @@ void runMainApp(bool startService) async {
   await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
   runApp(App());
+  SkyHelpBoard.instance.start();
 
   bool? alwaysOnTop;
   if (isDesktop) {
@@ -165,6 +167,7 @@ void runMainApp(bool startService) async {
       windowManager.focus();
       // Move registration of active main window here to prevent from async visible check.
       rustDeskWinManager.registerActiveWindow(kWindowMainId);
+      SkyHelp.openFromArgs(kBootArgs);
     }
     windowManager.setOpacity(1);
     windowManager.setTitle(getWindowName());
@@ -182,6 +185,7 @@ void runMobileApp() async {
   await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
   runApp(App());
+  SkyHelpBoard.instance.start();
   await initUniLinks();
 }
 

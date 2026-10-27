@@ -82,6 +82,7 @@ pub fn core_main() -> Option<Vec<String>> {
         }
         i += 1;
     }
+    let _sky_help_file = crate::sky_help::take_arg(&mut args);
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     if args.is_empty() {
         #[cfg(target_os = "linux")]
@@ -135,6 +136,13 @@ pub fn core_main() -> Option<Vec<String>> {
             .unwrap()
             .insert("disable-installation".to_owned(), "Y".to_owned());
         args.clear();
+    }
+    #[cfg(all(windows, feature = "flutter"))]
+    if _sky_help_file
+        .as_deref()
+        .is_some_and(crate::sky_help::send_to_running)
+    {
+        return None;
     }
     // The portable wrapper injects `--install` when its name ends with `install.exe`,
     // including `no-install.exe`. Drop the argument instead of exiting so disabled
@@ -837,7 +845,7 @@ fn core_main_invoke_new_connection(mut args: std::env::Args) -> Option<Vec<Strin
         use winapi::um::winuser::WM_USER;
         let res = crate::platform::send_message_to_hnwd(
             &crate::platform::FLUTTER_RUNNER_WIN32_WINDOW_CLASS,
-            &crate::get_app_name(),
+            &crate::get_app_display_name(), // SKY: the main window's title ("SKY Support")
             (WM_USER + 2) as _, // referred from unilinks desktop pub
             uni_links.as_str(),
             false,

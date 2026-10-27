@@ -69,6 +69,21 @@ or endorsed by them.
   does not do, and hbbs has no use for the token. So it is not sent (`io_loop` in
   `src/ui_session_interface.rs`) and the rendezvous goes as for a client not logged in; the token stays
   with the API server. Known limit: switching sides needs the same exchange.
+- Help requests (`src/sky_help.rs`, `flutter/lib/common/sky_help.dart`; the server side is our rustdesk-api,
+  `/api/sky/help`): the customer phones SKY and presses "Start remote help"; SKY Support sends its ID, its
+  one-time password and rows about the computer (name and user, OS, CPU, memory, Wi-Fi network, local IP,
+  version) plus what the program that started it passed, keeps telling the server it is still waiting and
+  what its password is, and a technician who is logged in accepts the request and connects with no digits
+  or questions (the one-time password changes as soon as it has let him in, which also tells the server
+  that he is in). Started as `--sky-help <file>` by the SKY Zapper app (the file must be a
+  `sky-help-*.json` straight in the user's temp folder; it is read once and deleted), or by the link
+  `sky-support://sky-help?f=<path in hex>` (a second start while SKY Support is open: `send_to_running`) or
+  `?d=<base64url JSON>` (Android, from the SKY Zapper app). Technicians see the requests at the top of the
+  connection page (desktop and mobile): the main window comes to the front with a sound when a new one
+  arrives, "Accept" connects. The phones shown to the customer come from the server.
+- `--connect <id>` to an open SKY Support: the main window's title is the display name ("SKY Support"),
+  so `core_main_invoke_new_connection` looks for that (it looked for "SKY-Support", found nothing, and the
+  open SKY Support never got the connection).
 - Build: `.github/workflows/sky-build.yml` builds Windows x64, Android arm64 and macOS (arm64 and Intel) with
   GitHub Actions; a manual run can be limited to `win-android` or `macos`.
 

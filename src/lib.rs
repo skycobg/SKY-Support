@@ -61,6 +61,8 @@ mod updater;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 mod sky_update;
 
+mod sky_help;
+
 mod ui_cm_interface;
 mod ui_interface;
 mod ui_session_interface;

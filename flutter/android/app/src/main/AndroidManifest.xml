@@ -80,6 +80,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="rustdesk" />
+                <data android:scheme="sky-support" />
             </intent-filter>
         </activity>
 

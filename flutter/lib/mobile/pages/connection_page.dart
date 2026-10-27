@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_hbb/models/peer_model.dart';
 
 import '../../common.dart';
+import '../../common/sky_help.dart';
 import '../../common/widgets/peer_tab_page.dart';
 import '../../common/widgets/autocomplete.dart';
 import '../../consts.dart';
@@ -87,6 +88,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
           if (!bind.isCustomClient() && !isIOS)
             Obx(() => _buildUpdateUI(stateGlobal.updateUrl.value)),
           _buildRemoteIDTextField(),
+          const SkyHelpBoardView(),
         ])),
         SliverFillRemaining(
           hasScrollBody: true,
