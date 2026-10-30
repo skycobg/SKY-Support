@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:bot_toast/bot_toast.dart';
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:dynamic_layouts/dynamic_layouts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/formatter/id_formatter.dart';
@@ -192,7 +191,6 @@ class _AddressBookState extends State<AddressBook> {
       return Offstage();
     }
     // order: personal, divider, character order
-    // https://pub.dev/packages/dropdown_button2#3-dropdownbutton2-with-items-of-different-heights-like-dividers
     final personalAddressBookName = gFFI.abModel.personalAddressBookName();
     bool contains = names.remove(personalAddressBookName);
     names.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
@@ -200,101 +198,65 @@ class _AddressBookState extends State<AddressBook> {
       names.insert(0, personalAddressBookName);
     }
 
-    Row buildItem(String e, {bool button = false}) {
-      return Row(
-        children: [
-          Expanded(
-            child: Tooltip(
-                waitDuration: Duration(milliseconds: 500),
-                message: gFFI.abModel.translatedName(e),
+    // SKY: the address books as a list, one under another (like the
+    // computers), instead of a drop-down menu.
+    final isOptFixed = isOptionFixed(kOptionCurrentAbName);
+    final current = gFFI.abModel.currentName.value;
+    final textColor = Theme.of(context).textTheme.titleLarge?.color;
+    Widget buildRow(String e) {
+      final selected = e == current;
+      final color = selected ? MyTheme.accent : textColor;
+      final name = gFFI.abModel.translatedName(e);
+      return InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: isOptFixed || selected
+            ? null
+            : () {
+                gFFI.abModel.setCurrentName(e);
+                bind.setLocalFlutterOption(k: kOptionCurrentAbName, v: e);
+              },
+        child: Container(
+          height: 32,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: selected ? MyTheme.accent.withOpacity(0.12) : null,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(children: [
+            Icon(e == personalAddressBookName ? Icons.person : Icons.group,
+                size: 16, color: color),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Tooltip(
+                waitDuration: const Duration(milliseconds: 500),
+                message: name,
                 child: Text(
-                  gFFI.abModel.translatedName(e),
-                  style: button ? null : TextStyle(fontSize: 14.0),
+                  name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  textAlign: button ? TextAlign.center : null,
-                )),
-          ),
-        ],
+                  style: TextStyle(
+                      fontSize: 14.0,
+                      color: color,
+                      fontWeight: selected ? FontWeight.w600 : null),
+                ),
+              ),
+            ),
+          ]),
+        ),
       );
     }
 
-    final items = names
-        .map((e) => DropdownMenuItem(value: e, child: buildItem(e)))
-        .toList();
-    var menuItemStyleData = MenuItemStyleData(height: 36);
-    if (contains && items.length > 1) {
-      items.insert(1, DropdownMenuItem(enabled: false, child: Divider()));
-      List<double> customHeights = List.filled(items.length, 36);
-      customHeights[1] = 4;
-      menuItemStyleData = MenuItemStyleData(customHeights: customHeights);
+    final rows = <Widget>[];
+    for (var i = 0; i < names.length; i++) {
+      rows.add(buildRow(names[i]));
+      if (i == 0 && contains && names.length > 1) {
+        rows.add(const Divider(height: 8));
+      }
     }
-    final TextEditingController textEditingController = TextEditingController();
-
-    final isOptFixed = isOptionFixed(kOptionCurrentAbName);
-    return DropdownButton2<String>(
-      value: gFFI.abModel.currentName.value,
-      onChanged: isOptFixed
-          ? null
-          : (value) {
-              if (value != null) {
-                gFFI.abModel.setCurrentName(value);
-                bind.setLocalFlutterOption(k: kOptionCurrentAbName, v: value);
-              }
-            },
-      customButton: Obx(() => Container(
-            height: stateGlobal.isPortrait.isFalse ? 48 : 40,
-            child: Row(children: [
-              Expanded(
-                  child:
-                      buildItem(gFFI.abModel.currentName.value, button: true)),
-              Icon(Icons.arrow_drop_down),
-            ]),
-          )),
-      underline: Container(
-        height: 0.7,
-        color: Theme.of(context).dividerColor.withOpacity(0.1),
-      ),
-      menuItemStyleData: menuItemStyleData,
-      items: items,
-      isExpanded: true,
-      isDense: true,
-      dropdownSearchData: DropdownSearchData(
-        searchController: textEditingController,
-        searchInnerWidgetHeight: 50,
-        searchInnerWidget: Container(
-          height: 50,
-          padding: const EdgeInsets.only(
-            top: 8,
-            bottom: 4,
-            right: 8,
-            left: 8,
-          ),
-          child: TextFormField(
-            expands: true,
-            maxLines: null,
-            controller: textEditingController,
-            decoration: InputDecoration(
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 8,
-              ),
-              hintText: translate('Search'),
-              hintStyle: const TextStyle(fontSize: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ).workaroundFreezeLinuxMint(),
-        ),
-        searchMatchFn: (item, searchValue) {
-          return item.value
-              .toString()
-              .toLowerCase()
-              .contains(searchValue.toLowerCase());
-        },
-      ),
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 240),
+      padding: const EdgeInsets.only(top: 6, bottom: 6),
+      child: ListView(shrinkWrap: true, children: rows),
     );
   }
 
@@ -455,226 +417,6 @@ class _AddressBookState extends State<AddressBook> {
           .toList(),
       elevation: 8,
     );
-  }
-
-  void addIdToCurrentAb() async {
-    if (gFFI.abModel.isCurrentAbFull(true)) {
-      return;
-    }
-    var isInProgress = false;
-    var passwordVisible = false;
-    IDTextEditingController idController = IDTextEditingController(text: '');
-    TextEditingController aliasController = TextEditingController(text: '');
-    TextEditingController passwordController = TextEditingController(text: '');
-    TextEditingController noteController = TextEditingController(text: '');
-    final tags = List.of(gFFI.abModel.currentAbTags);
-    var selectedTag = List<dynamic>.empty(growable: true).obs;
-    final style = TextStyle(fontSize: 14.0);
-    String? errorMsg;
-    final isCurrentAbShared = !gFFI.abModel.current.isPersonal();
-
-    gFFI.dialogManager.show((setState, close, context) {
-      submit() async {
-        setState(() {
-          isInProgress = true;
-          errorMsg = null;
-        });
-        String id = idController.id;
-        if (id.isEmpty) {
-          // pass
-        } else {
-          if (gFFI.abModel.idContainByCurrent(id)) {
-            setState(() {
-              isInProgress = false;
-              errorMsg = translate('ID already exists');
-            });
-            return;
-          }
-          var password = '';
-          if (isCurrentAbShared) {
-            password = passwordController.text;
-          }
-          String? errMsg2 = await gFFI.abModel.addIdToCurrent(
-              id,
-              aliasController.text.trim(),
-              password,
-              selectedTag,
-              noteController.text);
-          if (errMsg2 != null) {
-            setState(() {
-              isInProgress = false;
-              errorMsg = errMsg2;
-            });
-            return;
-          }
-          // final currentPeers
-        }
-        close();
-      }
-
-      double marginBottom = 4;
-
-      row({required Widget label, required Widget input}) {
-        makeChild(bool isPortrait) => Row(
-              children: [
-                !isPortrait
-                    ? ConstrainedBox(
-                        constraints: const BoxConstraints(minWidth: 100),
-                        child: label.marginOnly(right: 10))
-                    : SizedBox.shrink(),
-                Expanded(
-                  child: ConstrainedBox(
-                      constraints: const BoxConstraints(minWidth: 200),
-                      child: input),
-                ),
-              ],
-            ).marginOnly(bottom: !isPortrait ? 8 : 0);
-        return Obx(() => makeChild(stateGlobal.isPortrait.isTrue));
-      }
-
-      return CustomAlertDialog(
-        title: Text(translate("Add ID")),
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Column(
-              children: [
-                row(
-                    label: Row(
-                      children: [
-                        Text(
-                          '*',
-                          style: TextStyle(color: Colors.red, fontSize: 14),
-                        ),
-                        Text(
-                          'ID',
-                          style: style,
-                        ),
-                      ],
-                    ),
-                    input: Obx(() => TextField(
-                          controller: idController,
-                          inputFormatters: [IDTextInputFormatter()],
-                          decoration: InputDecoration(
-                              labelText: stateGlobal.isPortrait.isFalse
-                                  ? null
-                                  : translate('ID'),
-                              errorText: errorMsg,
-                              errorMaxLines: 5),
-                        ).workaroundFreezeLinuxMint())),
-                row(
-                  label: Text(
-                    translate('Alias'),
-                    style: style,
-                  ),
-                  input: Obx(() => TextField(
-                        controller: aliasController,
-                        decoration: InputDecoration(
-                          labelText: stateGlobal.isPortrait.isFalse
-                              ? null
-                              : translate('Alias'),
-                        ),
-                      ).workaroundFreezeLinuxMint()),
-                ),
-                if (isCurrentAbShared)
-                  row(
-                      label: Text(
-                        translate('Password'),
-                        style: style,
-                      ),
-                      input: Obx(
-                        () => TextField(
-                          controller: passwordController,
-                          obscureText: !passwordVisible,
-                          decoration: InputDecoration(
-                            labelText: stateGlobal.isPortrait.isFalse
-                                ? null
-                                : translate('Password'),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                  passwordVisible
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                  color: MyTheme.lightTheme.primaryColor),
-                              onPressed: () {
-                                setState(() {
-                                  passwordVisible = !passwordVisible;
-                                });
-                              },
-                            ),
-                          ),
-                        ).workaroundFreezeLinuxMint(),
-                      )),
-                row(
-                    label: Text(
-                      translate('Note'),
-                      style: style,
-                    ),
-                    input: Obx(
-                      () => TextField(
-                        controller: noteController,
-                        maxLines: 3,
-                        minLines: 1,
-                        maxLength: 300,
-                        decoration: InputDecoration(
-                          labelText: stateGlobal.isPortrait.isFalse
-                              ? null
-                              : translate('Note'),
-                        ),
-                      ).workaroundFreezeLinuxMint(),
-                    )),
-                if (gFFI.abModel.currentAbTags.isNotEmpty)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      translate('Tags'),
-                      style: style,
-                    ),
-                  ).marginOnly(top: 8, bottom: marginBottom),
-                if (gFFI.abModel.currentAbTags.isNotEmpty)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Wrap(
-                      children: tags
-                          .map((e) => AddressBookTag(
-                              name: e,
-                              tags: selectedTag,
-                              onTap: () {
-                                if (selectedTag.contains(e)) {
-                                  selectedTag.remove(e);
-                                } else {
-                                  selectedTag.add(e);
-                                }
-                              },
-                              showActionMenu: false))
-                          .toList(growable: false),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(
-              height: 4.0,
-            ),
-            if (!gFFI.abModel.current.isPersonal())
-              Row(children: [
-                Icon(Icons.info, color: Colors.amber).marginOnly(right: 4),
-                Text(
-                  translate('share_warning_tip'),
-                  style: TextStyle(fontSize: 12),
-                )
-              ]).marginSymmetric(vertical: 10),
-            // NOT use Offstage to wrap LinearProgressIndicator
-            if (isInProgress) const LinearProgressIndicator(),
-          ],
-        ),
-        actions: [
-          dialogButton("Cancel", onPressed: close, isOutline: true),
-          dialogButton("OK", onPressed: submit),
-        ],
-        onSubmit: submit,
-        onCancel: close,
-      );
-    });
   }
 
   void abAddTag() async {
@@ -896,4 +638,225 @@ MenuEntryButton<String> getEntry(String title, VoidCallback proc) {
     proc: proc,
     dismissOnClicked: true,
   );
+}
+
+// SKY: top-level, so the "+" next to search/refresh can open it too.
+void addIdToCurrentAb() async {
+  if (gFFI.abModel.isCurrentAbFull(true)) {
+    return;
+  }
+  var isInProgress = false;
+  var passwordVisible = false;
+  IDTextEditingController idController = IDTextEditingController(text: '');
+  TextEditingController aliasController = TextEditingController(text: '');
+  TextEditingController passwordController = TextEditingController(text: '');
+  TextEditingController noteController = TextEditingController(text: '');
+  final tags = List.of(gFFI.abModel.currentAbTags);
+  var selectedTag = List<dynamic>.empty(growable: true).obs;
+  final style = TextStyle(fontSize: 14.0);
+  String? errorMsg;
+  final isCurrentAbShared = !gFFI.abModel.current.isPersonal();
+
+  gFFI.dialogManager.show((setState, close, context) {
+    submit() async {
+      setState(() {
+        isInProgress = true;
+        errorMsg = null;
+      });
+      String id = idController.id;
+      if (id.isEmpty) {
+        // pass
+      } else {
+        if (gFFI.abModel.idContainByCurrent(id)) {
+          setState(() {
+            isInProgress = false;
+            errorMsg = translate('ID already exists');
+          });
+          return;
+        }
+        var password = '';
+        if (isCurrentAbShared) {
+          password = passwordController.text;
+        }
+        String? errMsg2 = await gFFI.abModel.addIdToCurrent(
+            id,
+            aliasController.text.trim(),
+            password,
+            selectedTag,
+            noteController.text);
+        if (errMsg2 != null) {
+          setState(() {
+            isInProgress = false;
+            errorMsg = errMsg2;
+          });
+          return;
+        }
+        // final currentPeers
+      }
+      close();
+    }
+
+    double marginBottom = 4;
+
+    row({required Widget label, required Widget input}) {
+      makeChild(bool isPortrait) => Row(
+            children: [
+              !isPortrait
+                  ? ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 100),
+                      child: label.marginOnly(right: 10))
+                  : SizedBox.shrink(),
+              Expanded(
+                child: ConstrainedBox(
+                    constraints: const BoxConstraints(minWidth: 200),
+                    child: input),
+              ),
+            ],
+          ).marginOnly(bottom: !isPortrait ? 8 : 0);
+      return Obx(() => makeChild(stateGlobal.isPortrait.isTrue));
+    }
+
+    return CustomAlertDialog(
+      title: Text(translate("Add ID")),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            children: [
+              row(
+                  label: Row(
+                    children: [
+                      Text(
+                        '*',
+                        style: TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                      Text(
+                        'ID',
+                        style: style,
+                      ),
+                    ],
+                  ),
+                  input: Obx(() => TextField(
+                        controller: idController,
+                        inputFormatters: [IDTextInputFormatter()],
+                        decoration: InputDecoration(
+                            labelText: stateGlobal.isPortrait.isFalse
+                                ? null
+                                : translate('ID'),
+                            errorText: errorMsg,
+                            errorMaxLines: 5),
+                      ).workaroundFreezeLinuxMint())),
+              row(
+                label: Text(
+                  translate('Alias'),
+                  style: style,
+                ),
+                input: Obx(() => TextField(
+                      controller: aliasController,
+                      decoration: InputDecoration(
+                        labelText: stateGlobal.isPortrait.isFalse
+                            ? null
+                            : translate('Alias'),
+                      ),
+                    ).workaroundFreezeLinuxMint()),
+              ),
+              if (isCurrentAbShared)
+                row(
+                    label: Text(
+                      translate('Password'),
+                      style: style,
+                    ),
+                    input: Obx(
+                      () => TextField(
+                        controller: passwordController,
+                        obscureText: !passwordVisible,
+                        decoration: InputDecoration(
+                          labelText: stateGlobal.isPortrait.isFalse
+                              ? null
+                              : translate('Password'),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                                passwordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: MyTheme.lightTheme.primaryColor),
+                            onPressed: () {
+                              setState(() {
+                                passwordVisible = !passwordVisible;
+                              });
+                            },
+                          ),
+                        ),
+                      ).workaroundFreezeLinuxMint(),
+                    )),
+              row(
+                  label: Text(
+                    translate('Note'),
+                    style: style,
+                  ),
+                  input: Obx(
+                    () => TextField(
+                      controller: noteController,
+                      maxLines: 3,
+                      minLines: 1,
+                      maxLength: 300,
+                      decoration: InputDecoration(
+                        labelText: stateGlobal.isPortrait.isFalse
+                            ? null
+                            : translate('Note'),
+                      ),
+                    ).workaroundFreezeLinuxMint(),
+                  )),
+              if (gFFI.abModel.currentAbTags.isNotEmpty)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    translate('Tags'),
+                    style: style,
+                  ),
+                ).marginOnly(top: 8, bottom: marginBottom),
+              if (gFFI.abModel.currentAbTags.isNotEmpty)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Wrap(
+                    children: tags
+                        .map((e) => AddressBookTag(
+                            name: e,
+                            tags: selectedTag,
+                            onTap: () {
+                              if (selectedTag.contains(e)) {
+                                selectedTag.remove(e);
+                              } else {
+                                selectedTag.add(e);
+                              }
+                            },
+                            showActionMenu: false))
+                        .toList(growable: false),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(
+            height: 4.0,
+          ),
+          if (!gFFI.abModel.current.isPersonal())
+            Row(children: [
+              Icon(Icons.info, color: Colors.amber).marginOnly(right: 4),
+              Text(
+                translate('share_warning_tip'),
+                style: TextStyle(fontSize: 12),
+              )
+            ]).marginSymmetric(vertical: 10),
+          // NOT use Offstage to wrap LinearProgressIndicator
+          if (isInProgress) const LinearProgressIndicator(),
+        ],
+      ),
+      actions: [
+        dialogButton("Cancel", onPressed: close, isOutline: true),
+        dialogButton("OK", onPressed: submit),
+      ],
+      onSubmit: submit,
+      onCancel: close,
+    );
+  });
 }

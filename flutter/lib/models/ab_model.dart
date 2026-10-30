@@ -57,6 +57,8 @@ class AbModel {
       _listPullError.value.isNotEmpty ? _listPullError : current.pullError;
   RxString get currentAbPushError => current.pushError;
   String? _personalAbGuid;
+  // SKY: the user's own name for "My address book" from the server (empty = default)
+  String _personalAbSkyName = '';
   RxBool legacyMode = false.obs;
 
   // Only handles peers add/remove
@@ -282,6 +284,7 @@ class AbModel {
         throw 'HTTP $statusCode';
       }
       _personalAbGuid = json['guid'];
+      _personalAbSkyName = (json['sky_name'] ?? '').toString().trim();
       // New server: guid is available, continue in non-legacy mode.
       return true;
     } catch (err) {
@@ -819,6 +822,9 @@ class AbModel {
   }
 
   String translatedName(String name) {
+    if (name == _personalAddressBookName && _personalAbSkyName.isNotEmpty) {
+      return _personalAbSkyName;
+    }
     if (name == _personalAddressBookName || name == _legacyAddressBookName) {
       return translate(name);
     } else {

@@ -160,7 +160,7 @@ class _PeerTabPageState extends State<PeerTabPage>
           return ReorderableDragStartListener(
               key: ValueKey(t),
               index: counter,
-              child: Obx(() => Tooltip(
+              child: _withAbPlus(t, Obx(() => Tooltip(
                     preferBelow: false,
                     message: model.tabTooltip(t),
                     onTriggered: isMobile ? mobileShowTabVisibilityMenu : null,
@@ -181,8 +181,31 @@ class _PeerTabPageState extends State<PeerTabPage>
                             },
                       onHover: (value) => hover.value = value,
                     ),
-                  )));
+                  ))));
         }).toList());
+  }
+
+  // SKY: a "+" right after the address book tab icon opens "Add ID".
+  Widget _withAbPlus(int tab, Widget tabWidget) {
+    if (tab != PeerTabIndex.ab.index) return tabWidget;
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      tabWidget,
+      Obx(() => Offstage(
+            offstage: !gFFI.userModel.isLogin ||
+                !gFFI.abModel.current.canWrite(),
+            child: _hoverAction(
+              context: context,
+              toolTip: translate('Add ID'),
+              onTap: () async {
+                if (gFFI.peerTabModel.currentTab != PeerTabIndex.ab.index) {
+                  await handleTabSelection(PeerTabIndex.ab.index);
+                }
+                addIdToCurrentAb();
+              },
+              child: Icon(Icons.add, size: 18),
+            ),
+          )),
+    ]);
   }
 
   Widget _createPeersView() {
@@ -231,6 +254,24 @@ class _PeerTabPageState extends State<PeerTabPage>
                   color: textColor,
                 ))),
       ),
+    );
+  }
+
+  // SKY: "+" next to refresh; "Add ID" was hidden in the tags panel menu.
+  Widget _createAddToAb() {
+    final model = Provider.of<PeerTabModel>(context);
+    return Offstage(
+      offstage: model.currentTab != PeerTabIndex.ab.index,
+      child: Obx(() => Offstage(
+            offstage: !gFFI.userModel.isLogin ||
+                !gFFI.abModel.current.canWrite(),
+            child: _hoverAction(
+              context: context,
+              toolTip: translate('Add ID'),
+              onTap: addIdToCurrentAb,
+              child: Icon(Icons.add, size: 18),
+            ),
+          )),
     );
   }
 
@@ -557,6 +598,7 @@ class _PeerTabPageState extends State<PeerTabPage>
           index: PeerTabIndex.ab, loading: gFFI.abModel.currentAbLoading),
       _createRefresh(
           index: PeerTabIndex.group, loading: gFFI.groupModel.groupLoading),
+      _createAddToAb(),
       Offstage(
         offstage: model.currentTabCachedPeers.isEmpty,
         child: _createMultiSelection(),
@@ -578,7 +620,10 @@ class _PeerTabPageState extends State<PeerTabPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final leftIconSize = Theme.of(context).iconTheme.size ?? 24;
     final leftActionsSize =
-        (leftIconSize + (4 + 4) * 2) * model.visibleEnabledOrderedIndexs.length;
+        (leftIconSize + (4 + 4) * 2) * model.visibleEnabledOrderedIndexs.length +
+            (model.visibleEnabledOrderedIndexs.contains(PeerTabIndex.ab.index)
+                ? 18 + 4 * 2
+                : 0);
     final availableWidth = screenWidth - 10 * 2 - leftActionsSize - 2 * 2;
     final searchWidth = 120;
     final otherActionWidth = 18 + 10;
@@ -626,6 +671,7 @@ class _PeerTabPageState extends State<PeerTabPage>
       if (model.currentTab == PeerTabIndex.group.index)
         _createRefresh(
             index: PeerTabIndex.group, loading: gFFI.groupModel.groupLoading),
+      if (model.currentTab == PeerTabIndex.ab.index) _createAddToAb(),
     ];
     final List<Widget> dynamicActions = [
       if (model.currentTabCachedPeers.isNotEmpty) _createMultiSelection(),
@@ -634,7 +680,7 @@ class _PeerTabPageState extends State<PeerTabPage>
     ];
     final rightWidth = availableWidth -
         searchWidth -
-        (actions.length == 2 ? otherActionWidth : 0);
+        (actions.length - 1) * otherActionWidth;
     final availablePositions = rightWidth ~/ otherActionWidth;
 
     if (availablePositions < dynamicActions.length &&
