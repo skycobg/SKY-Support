@@ -84,6 +84,9 @@ or endorsed by them.
 - `--connect <id>` to an open SKY Support: the main window's title is the display name ("SKY Support"),
   so `core_main_invoke_new_connection` looks for that (it looked for "SKY-Support", found nothing, and the
   open SKY Support never got the connection).
+- Address book: a "+" (Add ID) next to search/refresh and right after the address book tab icon; the
+  address books are a list, one under another, instead of a drop-down; "My address book" shows the
+  owner's own name from the server (`sky_name` of `/api/ab/personal`).
 - Build: `.github/workflows/sky-build.yml` builds Windows x64, Android arm64 and macOS (arm64 and Intel) with
   GitHub Actions; a manual run can be limited to `win-android` or `macos`.
 
