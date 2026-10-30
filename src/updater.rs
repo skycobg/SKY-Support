@@ -204,7 +204,7 @@ fn sky_check_update() -> ResultType<()> {
     if has_no_active_conns() {
         // Checked again from disk right before the privileged launch.
         crate::sky_update::verify_file(&file_path, &pending.sha256)?;
-        update_new_version(false, &pending.version, &file_path);
+        update_new_version(false, &pending.version, &file_path, &pending.sha256);
     }
     Ok(())
 }
