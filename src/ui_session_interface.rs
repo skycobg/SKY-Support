@@ -1977,8 +1977,9 @@ pub async fn io_loop<T: InvokeUiSession>(handler: Session<T>, round: u32) {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let (sender, mut receiver) = mpsc::unbounded_channel::<Data>();
     *handler.sender.write().unwrap() = Some(sender.clone());
-    // SKY: our hbbs (OSS) has no use for the API access token, and sending it takes a key exchange that it
-    // does not do (logged in, connecting timed out: "Failed to secure tcp"); the token stays with the API.
+    // SKY: our hbbs has no use for the API access token; the token stays with the API. (Sending it takes the
+    // key exchange, which our hbbs does since sky-1.1.16-5; before that, signed-in clients timed out with
+    // "Failed to secure tcp".)
     let token = String::new();
     let key = crate::get_key(false).await;
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
